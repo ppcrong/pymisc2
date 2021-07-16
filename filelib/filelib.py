@@ -1,6 +1,6 @@
 import enum
 
-from loglib import loglib
+from loglib.loglib import loglib
 
 
 class FILE_FMT(enum.IntEnum):

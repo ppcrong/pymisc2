@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 
-from printlib import printlib
+from loglib.printlib import printlib
 
 
 class loglib:

@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from PIL import Image, UnidentifiedImageError
 
-from loglib import loglib
+from loglib.loglib import loglib
 
 MASK5 = 0b011111
 MASK6 = 0b111111

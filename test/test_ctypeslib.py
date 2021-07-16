@@ -1,6 +1,6 @@
 from ctypes import CDLL
 
-from ctypeslib import ctypeslib
+from clib.ctypeslib import ctypeslib
 
 
 class Test_ctypeslib:

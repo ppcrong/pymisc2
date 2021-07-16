@@ -3,7 +3,7 @@ from threading import Thread, Lock
 import cv2
 import datetime
 
-from loglib import loglib
+from loglib.loglib import loglib
 
 
 class vslib:
@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
     # video
     # http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/gear2/prog_index.m3u8
-    with vslib('asset/4K.mp4') as vs:
+    with vslib('../asset/4K.mp4') as vs:
         if not vs.is_opened():
             print(f'open source {vs.src} fail!!!')
         else:

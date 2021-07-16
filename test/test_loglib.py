@@ -1,4 +1,4 @@
-from loglib import loglib
+from loglib.loglib import loglib
 
 
 class Test_loglib:

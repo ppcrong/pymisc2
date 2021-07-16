@@ -1,2 +1,2 @@
-# pymisc
-python misc utility
+# pymisc2
+python misc2 shared module

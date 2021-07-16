@@ -1,4 +1,4 @@
-from filelib import filelib
+from filelib.filelib import filelib
 
 
 class Test_filelib:
