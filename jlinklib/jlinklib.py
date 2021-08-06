@@ -24,7 +24,6 @@ class jlinklib:
 
         [workaround]
             1. first, use installed jlink dll
-
             2. if not install jlink, then use dll in dll_path
         """
         jlink = None
