@@ -59,7 +59,6 @@ class jlinklib:
         while True:
             try:
                 self.logger.info(f'num_connected_emulators: {jlink.num_connected_emulators()}')
-                jlink.disable_dialog_boxes()
 
                 if serial_no:
                     jlink.open(serial_no=serial_no)
@@ -69,24 +68,27 @@ class jlinklib:
                     if info:
                         # open jlink
                         jlink.open(serial_no=info.SerialNumber)
-                        self.logger.i(f'\t\tjlink.firmware_version: {jlink.firmware_version}')
-                        self.logger.i(f'\t\tjlink.hardware_version: {jlink.hardware_version}')
+                        self.logger.info(f'jlink.firmware_version: {jlink.firmware_version}')
+                        self.logger.info(f'jlink.hardware_version: {jlink.hardware_version}')
                     else:
                         self.logger.error('no jlink!!!')
                         break
 
                     # set interface (default is SWD)
                     ret = jlink.set_tif(interface)
-                    self.logger.i(f'\t\tset_tif ret: {ret}')
+                    self.logger.info(f'set_tif({interface}) ret: {ret}')
 
                     # set device xml path
                     if device_xml and not device_xml.isspace():
                         ret_code = jlink.exec_command(f'JLinkDevicesXMLPath = {device_xml}')
-                        self.logger.i(f'\t\texec_command (JLinkDevicesXMLPath={device_xml}) ret_code: {ret_code}')
+                        self.logger.info(f'exec_command (JLinkDevicesXMLPath={device_xml}) ret_code: {ret_code}')
 
-                    # connect jlink
-                    jlink.connect(chip_name=chip_name, speed=speed)
-                    self.logger.i(f'\t\tcore_name: {jlink.core_name()}')
+                # disable after open to avoid JLinkException: No emulator with serial number 63680012 found
+                jlink.disable_dialog_boxes()
+
+                # connect jlink
+                jlink.connect(chip_name=chip_name, speed=speed)
+                self.logger.info(f'core_name: {jlink.core_name()}')
 
             except Exception as e:
                 self.logger.error(f'{type(e).__name__}!!! {e}')
@@ -150,9 +152,9 @@ class jlinklib:
         info = None
         info_list = jlink.connected_emulators()
         for i, item in enumerate(info_list):
-            self.logger.i(f'info[{i}]:')
-            self.logger.i(f'\t\tSerial Number: {item.SerialNumber}')
-            self.logger.i(f'\t\tConnection: {item.Connection}')
+            self.logger.info(f'JLinkConnectInfo[{i}]:')
+            self.logger.info(f'\tSerial Number: {item.SerialNumber}')
+            self.logger.info(f'\tConnection: {item.Connection}')
 
         if len(info_list) > 0:
             info = info_list[0]
