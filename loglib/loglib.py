@@ -50,6 +50,15 @@ class loglib:
             log(self, msg)
         return func
 
+    def _init_console_with_level(log):
+        """
+        init_console decorator (with level arg)
+        """
+        def func(self, level: int, msg: str = ''):
+            self.init_console()
+            log(self, level, msg)
+        return func
+
     def init_console(self):
         if not self.consolehandler:
             # print(f' init console {self.module} '.center(100, '^'))
@@ -117,7 +126,7 @@ class loglib:
     def c(self, msg: str = ''):
         self.logger.critical(msg)
 
-    @_init_console
+    @_init_console_with_level
     def l(self, level: int, msg: str = ''):
         self.logger.log(level, msg)
 
@@ -149,7 +158,7 @@ class loglib:
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S.%f')[:-3]
         self.logger.debug(f'C/{timestamp} {msg}')
 
-    @_init_console
+    @_init_console_with_level
     def l1(self, level: int, msg: str = ''):
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S.%f')[:-3]
         self.logger.log(level, f'{logging.getLevelName(level)}/{timestamp} {msg}')
@@ -177,7 +186,7 @@ class loglib:
     def critical(self, msg: str = ''):
         self.logger.critical('C/{} {}'.format(printlib.get_caller_info(3), msg))
 
-    @_init_console
+    @_init_console_with_level
     def log(self, level: int, msg: str = ''):
         self.logger.log(level, '{}/{} {}'.format(logging.getLevelName(level), printlib.get_caller_info(3), msg))
 
