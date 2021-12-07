@@ -21,8 +21,8 @@ class serlib:
         self.bufw = queue.Queue()
         try:
             self.serial = serial.Serial(port=port, baudrate=baudrate, timeout=1, write_timeout=1)
-        except serial.serialutil.SerialException as e:
-            self.logger.error(e)
+        except Exception as e:
+            self.logger.error(f'{type(e).__name__}!!! {e}')
 
     def is_opened(self):
         if self.serial:
@@ -59,10 +59,8 @@ class serlib:
                 len_write = self.serial.write(data.encode())
                 self.logger.info(f'WRITE len({len_write})')
                 self.logger.info(f'WRITE >>> {data}')
-            except serial.serialutil.SerialException as e:
-                self.logger.error(e)
-            except serial.serialutil.SerialTimeoutException as e:
-                self.logger.error(e)
+            except Exception as e:
+                self.logger.error(f'{type(e).__name__}!!! {e}')
         else:
             self.logger.error('serial is None!!!')
 
@@ -78,8 +76,8 @@ class serlib:
                 self.logger.info(f'READ len({len(data)})')
                 self.logger.info(f'READ <<<\n{data}')
                 ret = data
-            except serial.serialutil.SerialException as e:
-                self.logger.error(e)
+            except Exception as e:
+                self.logger.error(f'{type(e).__name__}!!! {e}')
         else:
             self.logger.error('serial is None!!!')
         return ret
@@ -93,8 +91,8 @@ class serlib:
                 self.logger.info(f'READ len({len(data)})')
                 self.logger.info(f'READ <<< {data}')
                 ret = data
-            except serial.serialutil.SerialException as e:
-                self.logger.error(e)
+            except Exception as e:
+                self.logger.error(f'{type(e).__name__}!!! {e}')
         else:
             self.logger.error('serial is None!!!')
         return ret
