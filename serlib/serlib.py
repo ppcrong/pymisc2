@@ -3,6 +3,7 @@ import queue
 from concurrent.futures.thread import ThreadPoolExecutor
 
 import serial
+from serial import EIGHTBITS, PARITY_NONE, STOPBITS_ONE
 
 from loglib.loglib import loglib
 
@@ -12,7 +13,19 @@ class serlib:
     The library for serial port.
     """
 
-    def __init__(self, port: str, baudrate: int = 115200):
+    def __init__(self,
+                 port: str,
+                 baudrate: int = 115200,
+                 bytesize: int = EIGHTBITS,
+                 parity: str = PARITY_NONE,
+                 stopbits: float = STOPBITS_ONE,
+                 timeout: int = 1,
+                 xonxoff: bool = False,
+                 rtscts: bool = False,
+                 write_timeout: int = 1,
+                 dsrdtr: bool = False,
+                 inter_byte_timeout=None
+                 ):
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S.%f')
         self.logger = loglib(f'{__name__}_p{port}_time{timestamp}')
         self.port = port
@@ -20,7 +33,18 @@ class serlib:
         self.bufr = queue.Queue()
         self.bufw = queue.Queue()
         try:
-            self.serial = serial.Serial(port=port, baudrate=baudrate, timeout=1, write_timeout=1)
+            self.serial = serial.Serial(port=port,
+                                        baudrate=baudrate,
+                                        bytesize=bytesize,
+                                        parity=parity,
+                                        stopbits=stopbits,
+                                        timeout=timeout,
+                                        xonxoff=xonxoff,
+                                        rtscts=rtscts,
+                                        write_timeout=write_timeout,
+                                        dsrdtr=dsrdtr,
+                                        inter_byte_timeout=inter_byte_timeout
+                                        )
         except Exception as e:
             self.logger.error(f'{type(e).__name__}!!! {e}')
 
