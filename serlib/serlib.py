@@ -29,7 +29,8 @@ class serlib(QThread):
                  write_timeout: int = 1,
                  dsrdtr: bool = False,
                  inter_byte_timeout: int = None,
-                 read_received=None
+                 read_received=None,
+                 console_show_read: bool = False
                  ):
         super().__init__()
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S.%f')
@@ -42,6 +43,7 @@ class serlib(QThread):
             self.read_received.connect(read_received)
         else:
             self.read_received = None
+        self.console_show_read = console_show_read
         try:
             self.serial = serial.Serial(port=port,
                                         baudrate=baudrate,
@@ -107,8 +109,9 @@ class serlib(QThread):
             try:
                 raw = self.serial.read(size=size)
                 data = raw.decode()
-                self.logger.info(f'READ len({len(data)})')
-                self.logger.info(f'READ <<<\n{data}')
+                if self.console_show_read:
+                    self.logger.info(f'READ len({len(data)})')
+                    self.logger.info(f'READ <<<\n{data}')
                 ret = data
             except Exception as e:
                 self.logger.error(f'{type(e).__name__}!!! {e}')
