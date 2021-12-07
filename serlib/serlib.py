@@ -50,14 +50,14 @@ class serlib:
 
     def is_opened(self):
         if self.serial:
-            return self.serial.isOpen()
+            return self.serial.is_open
         else:
             self.logger.error('serial is None!!!')
             return False
 
     def in_waiting(self):
         if self.serial:
-            return self.serial.inWaiting()
+            return self.serial.in_waiting
         else:
             self.logger.error('serial is None!!!')
             return False
@@ -121,10 +121,16 @@ class serlib:
             self.logger.error('serial is None!!!')
         return ret
 
-    def start(self):
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            executor.submit(self.write_thread)
-            executor.submit(self.read_thread)
+    def start(self, readline: bool = False):
+        self.logger.error(f'readline: {readline}')
+        if readline:
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                executor.submit(self.write_thread)
+                executor.submit(self.readline_thread)
+        else:
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                executor.submit(self.write_thread)
+                executor.submit(self.read_thread)
         self.logger.info('all done!!!')
 
     def stop(self):
@@ -157,6 +163,24 @@ class serlib:
                     self.bufr.put(data)
 
         self.logger.info('EXIT reading...')
+
+    def readline_thread(self):
+        """
+        keep reading line and put data into read buffer
+        """
+        if not self.serial:
+            self.logger.error('serial is None!!!')
+            return
+
+        while self.is_opened():
+            size = self.in_waiting()
+            # self.logger.info(f'size: {size}')
+            if size:
+                data = self.readline()
+                if data:
+                    self.bufr.put(data)
+
+        self.logger.info('EXIT reading line...')
 
     def write_thread(self):
         """
@@ -198,7 +222,7 @@ if __name__ == "__main__":
         if not s.is_opened():
             print(f'open {s.port} fail!!!')
         else:
-            print(f'open {s.port} ok!!! is_open: {s.is_opened()}')
+            print(f'open {s.port} ok!!! is_opened: {s.is_opened()}')
             s.close()
 
     ps = serlib.comports()
