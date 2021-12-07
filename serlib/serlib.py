@@ -1,14 +1,16 @@
 import datetime
-import queue
+from collections import deque
 from concurrent.futures.thread import ThreadPoolExecutor
 
 import serial
+from PyQt5.QtCore import QThread
 from serial import EIGHTBITS, PARITY_NONE, STOPBITS_ONE
 
 from loglib.loglib import loglib
+from serlib import QUEUE_READ_MAX
 
 
-class serlib:
+class serlib(QThread):
     """
     The library for serial port.
     """
@@ -24,14 +26,15 @@ class serlib:
                  rtscts: bool = False,
                  write_timeout: int = 1,
                  dsrdtr: bool = False,
-                 inter_byte_timeout=None
+                 inter_byte_timeout: int = None
                  ):
+        super().__init__()
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S.%f')
         self.logger = loglib(f'{__name__}_p{port}_time{timestamp}')
         self.port = port
         self.serial = None
-        self.bufr = queue.Queue()
-        self.bufw = queue.Queue()
+        self.bufr = deque(maxlen=QUEUE_READ_MAX)
+        self.bufw = deque()
         try:
             self.serial = serial.Serial(port=port,
                                         baudrate=baudrate,
@@ -72,7 +75,7 @@ class serlib:
         """
         put write data into queue (write_thread check queue to write)
         """
-        self.bufw.put(data)
+        self.bufw.appendleft(data)
 
     def write(self, data: str):
         """
@@ -121,18 +124,6 @@ class serlib:
             self.logger.error('serial is None!!!')
         return ret
 
-    def start(self, readline: bool = False):
-        self.logger.error(f'readline: {readline}')
-        if readline:
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                executor.submit(self.write_thread)
-                executor.submit(self.readline_thread)
-        else:
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                executor.submit(self.write_thread)
-                executor.submit(self.read_thread)
-        self.logger.info('all done!!!')
-
     def stop(self):
         self.close()
 
@@ -146,6 +137,13 @@ class serlib:
     # endregion [with]
 
     # region [thread]
+    def run(self):
+        self.logger.info(f'start!!!')
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            executor.submit(self.write_thread)
+            executor.submit(self.read_thread)
+        self.logger.info('all done!!!')
+
     def read_thread(self):
         """
         keep reading and put data into read buffer
@@ -160,27 +158,10 @@ class serlib:
             if size:
                 data = self.read(size)
                 if data:
-                    self.bufr.put(data)
+                    self.bufr.appendleft(data)
 
+        # [TODO] this log won't be shown after stop
         self.logger.info('EXIT reading...')
-
-    def readline_thread(self):
-        """
-        keep reading line and put data into read buffer
-        """
-        if not self.serial:
-            self.logger.error('serial is None!!!')
-            return
-
-        while self.is_opened():
-            size = self.in_waiting()
-            # self.logger.info(f'size: {size}')
-            if size:
-                data = self.readline()
-                if data:
-                    self.bufr.put(data)
-
-        self.logger.info('EXIT reading line...')
 
     def write_thread(self):
         """
@@ -191,8 +172,8 @@ class serlib:
             return
 
         while self.is_opened():
-            if not self.bufw.empty():
-                self.write(self.bufw.get(block=True, timeout=1))
+            if len(self.bufw) > 0:
+                self.write(self.bufw.pop())
 
         self.logger.info('EXIT writing...')
 
