@@ -3,7 +3,7 @@ from collections import deque
 from concurrent.futures.thread import ThreadPoolExecutor
 
 import serial
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QThread, pyqtSignal
 from serial import EIGHTBITS, PARITY_NONE, STOPBITS_ONE
 
 from loglib.loglib import loglib
@@ -14,6 +14,8 @@ class serlib(QThread):
     """
     The library for serial port.
     """
+
+    read_received = pyqtSignal(str)
 
     def __init__(self,
                  port: str,
@@ -26,7 +28,8 @@ class serlib(QThread):
                  rtscts: bool = False,
                  write_timeout: int = 1,
                  dsrdtr: bool = False,
-                 inter_byte_timeout: int = None
+                 inter_byte_timeout: int = None,
+                 read_received=None
                  ):
         super().__init__()
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S.%f')
@@ -35,6 +38,10 @@ class serlib(QThread):
         self.serial = None
         self.bufr = deque(maxlen=QUEUE_READ_MAX)
         self.bufw = deque()
+        if read_received:
+            self.read_received.connect(read_received)
+        else:
+            self.read_received = None
         try:
             self.serial = serial.Serial(port=port,
                                         baudrate=baudrate,
@@ -159,6 +166,8 @@ class serlib(QThread):
                 data = self.read(size)
                 if data:
                     self.bufr.appendleft(data)
+                    if self.read_received:
+                        self.read_received.emit(data)
 
         # [TODO] this log won't be shown after stop
         self.logger.info('EXIT reading...')
