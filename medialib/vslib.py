@@ -1,4 +1,5 @@
 from threading import Thread, Lock
+from typing import Union
 
 import cv2
 
@@ -14,7 +15,7 @@ class vslib:
 
     slogger = loglib('__name__')
 
-    def __init__(self, src=0, width: int = 0, height: int = 0):
+    def __init__(self, src: Union[int, str] = 0, width: int = 0, height: int = 0):
         self.update_thread = None
         import datetime
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S.%f')
@@ -82,6 +83,8 @@ class vslib:
         return self.stream.isOpened()
 
     def release(self):
+        # stop before release
+        self.stop()
         self.stream.release()
 
     def getinfo(self):
@@ -130,12 +133,11 @@ class vslib:
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.logger.info()
-        self.stop()
         self.release()
     # endregion [with]
 
 
-if __name__ == "__main__":
+def main():
     """
     For console test
     """
@@ -179,7 +181,7 @@ if __name__ == "__main__":
 
     # video
     # http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/gear2/prog_index.m3u8
-    with vslib('../asset/4K.mp4') as vs:
+    with vslib(src='../asset/4K.mp4') as vs:
         if not vs.is_opened():
             print(f'open source {vs.src} fail!!!')
         else:
@@ -205,3 +207,7 @@ if __name__ == "__main__":
                 if cv2.waitKey(delay) == 27:
                     break
             cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+    main()
