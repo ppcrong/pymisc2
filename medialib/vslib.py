@@ -1,7 +1,6 @@
 from threading import Thread, Lock
 
 import cv2
-import datetime
 
 from loglib.loglib import loglib
 
@@ -13,8 +12,11 @@ class vslib:
     reference: https://gist.github.com/allskyee/7749b9318e914ca45eb0a1000a81bf56
     """
 
+    slogger = loglib('__name__')
+
     def __init__(self, src=0, width: int = 0, height: int = 0):
         self.update_thread = None
+        import datetime
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S.%f')
         self.logger = loglib(f'{__name__}_time{timestamp}')
 
@@ -72,6 +74,7 @@ class vslib:
 
     # endregion [video]
 
+    # region [function]
     def set(self, propid: int, value: int):
         self.stream.set(propId=propid, value=value)
 
@@ -87,6 +90,38 @@ class vslib:
         fps = self.stream.get(cv2.CAP_PROP_FPS)
         fcnt = self.stream.get(cv2.CAP_PROP_FRAME_COUNT)
         return w, h, fps, fcnt
+
+    @staticmethod
+    def get_cam_list(scan_count: int = 10):
+        """
+        get valid camera list
+
+        Parameters
+        ----------
+        scan_count : int
+            how many cameras to scan
+
+        Returns
+        -------
+        list
+            valid camera list
+        """
+
+        index = 0
+        list_cam = []
+        while scan_count > 0:
+            cap = cv2.VideoCapture(index)
+            if cap and cap.isOpened():
+                if not cap.read()[0]:
+                    vslib.slogger.warning(f'cam{index} read fail!!!')
+                list_cam.append(index)
+                cap.release()
+
+            index += 1
+            scan_count -= 1
+        return list_cam
+
+    # endregion [function]
 
     # region [with]
     def __enter__(self):
