@@ -1,3 +1,5 @@
+from typing import Union
+
 import cv2
 import numpy as np
 from PIL import Image, UnidentifiedImageError
@@ -45,7 +47,7 @@ class imagelib:
         return rgb888
 
     @staticmethod
-    def rgb8882rgba(rgb888, width: int, height: int):
+    def rgb8882rgba(rgb888: Union[bytes, bytearray, np.ndarray], width: int = 0, height: int = 0):
         """
         RGB888 to RGBA.
 
@@ -71,6 +73,8 @@ class imagelib:
                 rgb888 = np.frombuffer(rgb888, dtype=np.uint8).reshape(height, width, 3)
             elif type(rgb888) is bytearray:
                 rgb888 = np.array(rgb888, dtype=np.uint8).reshape(height, width, 3)
+            elif type(rgb888) is np.ndarray:
+                pass
             rgba = cv2.cvtColor(rgb888, cv2.COLOR_RGB2RGBA)
         except ValueError as e:
             imagelib.slogger.error('ValueError: {}'.format(e))
