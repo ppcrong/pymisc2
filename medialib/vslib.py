@@ -112,24 +112,22 @@ class vslib:
             valid camera list
         """
 
-        index = 0
-        list_cam = []
-        while scan_count > 0:
+        cams = []
+        for index in range(scan_count):
             cap = cv2.VideoCapture(index)
             if cap and cap.isOpened():
                 if not cap.read()[0]:
                     vslib.slogger.warning(f'cam{index} read fail!!!')
-                list_cam.append(index)
+                cams.append(index)
                 cap.release()
 
-            index += 1
-            scan_count -= 1
-        return list_cam
+        return cams
 
     @staticmethod
     def get_cam_list_res(scan_count: int = 10):
         """
         get valid camera list with supported resolutions
+        [NOTE] cap.set will spend long time...
 
         Parameters
         ----------
@@ -138,18 +136,17 @@ class vslib:
 
         Returns
         -------
-        list
-            valid camera list
+        dict
+            valid camera dict with resolutions
         """
 
-        list_cam = []
+        cams = {}
         for index in range(scan_count):
             cap = cv2.VideoCapture(index)
             if cap and cap.isOpened():
                 # don't read here to avoid cap.set fail!!!
                 # if not cap.read()[0]:
                 #     vslib.slogger.warning(f'cam{index} read fail!!!')
-                cam_info = {'cam_src': index}
 
                 """
                 find default resolution
@@ -162,16 +159,20 @@ class vslib:
                 """
                 prepare resolutions
                 """
-                resolutions = medialib.DICT_WEBCAM_COMMON_RES.copy()
+                resolutions = medialib.DICT_RESOLUTIONS.copy()
 
                 """
                 remove unsupported resolution
                 """
-                for res in medialib.DICT_WEBCAM_COMMON_RES:
-                    (w, h) = (medialib.DICT_WEBCAM_COMMON_RES[res]['w'], medialib.DICT_WEBCAM_COMMON_RES[res]['h'])
+                for res in medialib.DICT_RESOLUTIONS:
+                    (w, h) = (medialib.DICT_RESOLUTIONS[res]['w'], medialib.DICT_RESOLUTIONS[res]['h'])
                     ret_w = cap.set(cv2.CAP_PROP_FRAME_WIDTH, w)
                     ret_h = cap.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
-                    vslib.slogger.info(f'ret: {ret_w},{ret_h}')
+                    if not ret_w or not ret_h:
+                        # remove unsupported resolution
+                        resolutions.pop(res)
+                        continue
+
                     w_get = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
                     h_get = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                     if w != w_get or h != h_get:
@@ -180,12 +181,11 @@ class vslib:
 
                 if default_res in resolutions:
                     resolutions[default_res]['default'] = True
-                cam_info['resolutions'] = resolutions
-                list_cam.append(cam_info)
+                cams[index] = resolutions
 
             cap.release()
 
-        return list_cam
+        return cams
     # endregion [function]
 
     # region [with]
