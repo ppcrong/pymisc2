@@ -14,13 +14,13 @@ class imagelib:
     slogger = loglib(__name__)
 
     @staticmethod
-    def rgba2rgb888(rgba, width: int, height: int):
+    def rgba2rgb888(rgba: bytes, width: int, height: int):
         """
         RGBA to RGB888.
 
         Parameters
         ----------
-        rgba : bytes or bytearray
+        rgba : bytes
             rgba image data
         width : int
             width of image
@@ -36,24 +36,21 @@ class imagelib:
         rgb888 = None
 
         try:
-            if type(rgba) is bytes:
-                rgba = np.frombuffer(rgba, dtype=np.uint8).reshape(height, width, 4)
-            elif type(rgba) is bytearray:
-                rgba = np.array(rgba, dtype=np.uint8).reshape(height, width, 4)
+            rgba = np.frombuffer(rgba, dtype=np.uint8).reshape(height, width, 4)
             rgb888 = cv2.cvtColor(rgba, cv2.COLOR_RGBA2RGB)
-        except ValueError as e:
-            imagelib.slogger.error('ValueError: {}'.format(e))
+        except Exception as e:
+            imagelib.slogger.error(f'{type(e).__name__}!!! {e}')
 
         return rgb888
 
     @staticmethod
-    def rgb8882rgba(rgb888: Union[bytes, bytearray, np.ndarray], width: int = 0, height: int = 0):
+    def rgb8882rgba(rgb888: Union[bytes, np.ndarray], width: int = 0, height: int = 0):
         """
         RGB888 to RGBA.
 
         Parameters
         ----------
-        rgb888 : bytes or bytearray
+        rgb888 : Union[bytes, np.ndarray]
             rgb888 image data
         width : int
             width of image
@@ -71,18 +68,16 @@ class imagelib:
         try:
             if type(rgb888) is bytes:
                 rgb888 = np.frombuffer(rgb888, dtype=np.uint8).reshape(height, width, 3)
-            elif type(rgb888) is bytearray:
-                rgb888 = np.array(rgb888, dtype=np.uint8).reshape(height, width, 3)
             elif type(rgb888) is np.ndarray:
                 pass
             rgba = cv2.cvtColor(rgb888, cv2.COLOR_RGB2RGBA)
-        except ValueError as e:
-            imagelib.slogger.error('ValueError: {}'.format(e))
+        except Exception as e:
+            imagelib.slogger.error(f'{type(e).__name__}!!! {e}')
 
         return rgba
 
     @staticmethod
-    def rgb5652rgb888(rgb565, width: int, height: int):
+    def rgb5652rgb888(rgb565: bytes, width: int, height: int):
         """
         RGB565 to RGB888.
 
@@ -90,7 +85,7 @@ class imagelib:
 
         Parameters
         ----------
-        rgb565 : bytes or bytearray
+        rgb565 : bytes
             rgb565 image data
         width : int
             width of image
@@ -107,10 +102,7 @@ class imagelib:
 
         try:
             # convert to ndarray (height, width, channel)
-            if type(rgb565) is bytes:
-                rgb565 = np.frombuffer(rgb565, dtype=np.uint8).reshape(height, width, 2)
-            elif type(rgb565) is bytearray:
-                rgb565 = np.array(rgb565, dtype=np.uint8).reshape(height, width, 2)
+            rgb565 = np.frombuffer(rgb565, dtype=np.uint8).reshape(height, width, 2)
             # convert WxHx2 array of uint8 into WxH array of uint16
             byte0 = rgb565[:, :, 0].astype(np.uint16)
             byte1 = rgb565[:, :, 1].astype(np.uint16)
@@ -120,8 +112,8 @@ class imagelib:
             g8 = ((rgb565 >> 5) & MASK6) << 2
             r8 = ((rgb565 >> (5 + 6)) & MASK5) << 3
             rgb888 = np.dstack((r8, g8, b8)).astype(np.uint8)
-        except ValueError as e:
-            imagelib.slogger.error('ValueError: {}'.format(e))
+        except Exception as e:
+            imagelib.slogger.error(f'{type(e).__name__}!!! {e}')
 
         return rgb888
 
@@ -338,13 +330,13 @@ class imagelib:
         return width, height, channel
 
     @staticmethod
-    def buf2rgba(buffer, width: int, height: int, channel: int):
+    def buf2rgba(buffer: bytes, width: int, height: int, channel: int):
         """
         convert buffer to rgba.
 
         Parameters
         ----------
-        buffer : bytes or bytearray
+        buffer : bytes
             image data
         width : int
             width of image
@@ -361,10 +353,7 @@ class imagelib:
 
         rgba = None
         if channel == 1:
-            if type(buffer) is bytes:
-                image = Image.frombytes('L', (width, height), buffer, 'raw')
-            elif type(buffer) is bytearray:
-                image = Image.frombytes('L', (width, height), bytes(buffer), 'raw')
+            image = Image.frombytes('L', (width, height), buffer, 'raw')
             rgba = image.convert('RGBA')
             rgba = np.array(rgba)
         elif channel == 2:
@@ -377,13 +366,13 @@ class imagelib:
         return rgba
 
     @staticmethod
-    def buf2rgb888(buffer, width: int, height: int, channel: int):
+    def buf2rgb888(buffer: bytes, width: int, height: int, channel: int):
         """
         convert buffer to rgb888.
 
         Parameters
         ----------
-        buffer : bytes or bytearray
+        buffer : bytes
             image data
         width : int
             width of image
@@ -400,10 +389,7 @@ class imagelib:
 
         rgb888 = None
         if channel == 1:
-            if type(buffer) is bytes:
-                image = Image.frombytes('L', (width, height), buffer, 'raw')
-            elif type(buffer) is bytearray:
-                image = Image.frombytes('L', (width, height), bytes(buffer), 'raw')
+            image = Image.frombytes('L', (width, height), buffer, 'raw')
             rgb888 = image.convert('RGB')
             rgb888 = np.array(rgb888)
         elif channel == 2:
@@ -415,13 +401,13 @@ class imagelib:
         return rgb888
 
     @staticmethod
-    def buf2rgb565(buffer, width: int, height: int, channel: int):
+    def buf2rgb565(buffer: bytes, width: int, height: int, channel: int):
         """
         convert buffer to rgb565.
 
         Parameters
         ----------
-        buffer : bytes or bytearray
+        buffer : bytes
             image data
         width : int
             width of image
@@ -438,10 +424,7 @@ class imagelib:
 
         rgb565 = None
         if channel == 1:
-            if type(buffer) is bytes:
-                image = Image.frombytes('L', (width, height), buffer, 'raw')
-            elif type(buffer) is bytearray:
-                image = Image.frombytes('L', (width, height), bytes(buffer), 'raw')
+            image = Image.frombytes('L', (width, height), buffer, 'raw')
             rgb888 = image.convert('RGB')
             rgb888 = np.array(rgb888)
             rgb565 = imagelib.rgb8882rgb565(rgb888)
@@ -634,12 +617,8 @@ class imagelib:
 
             try:
                 buf = Image.open(img_name)
-            except FileNotFoundError as e:
-                imagelib.slogger.error('FileNotFoundError: {}'.format(e))
-            except UnidentifiedImageError as e:
-                imagelib.slogger.error('UnidentifiedImageError: {}'.format(e))
-            except ValueError as e:
-                imagelib.slogger.error('ValueError: {}'.format(e))
+            except Exception as e:
+                imagelib.slogger.error(f'{type(e).__name__}!!! {e}')
 
             break
 
