@@ -29,7 +29,8 @@ class vslib:
             self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, width)
             self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
         self.logger.info(f'(w, h, fps, fcnt): {self.getinfo()}')
-        (self.grabbed, self.frame) = self.stream.read()
+        if type(src) == int:
+            (self.grabbed, self.frame) = self.stream.read()
         self.started = False
         self.read_lock = Lock()
 
