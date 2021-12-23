@@ -221,7 +221,7 @@ def main():
                 # display
                 cv2.imshow('webcam', frame)
                 # wait for ESC key
-                if cv2.waitKey(1) == 27:
+                if cv2.waitKey(1) & 0xFF == 27:
                     break
 
             # Number of frames to capture
@@ -267,7 +267,7 @@ def main():
                 # display
                 cv2.imshow('video', frame)
                 # wait for ESC key
-                if cv2.waitKey(delay) == 27:
+                if cv2.waitKey(delay) & 0xFF == 27:
                     break
             cv2.destroyAllWindows()
 
