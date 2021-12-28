@@ -7,7 +7,7 @@ from loglib.loglib import loglib
 
 class jlinklib:
     """
-    wrapper for pylink
+    v1 wrapper for pylink
     """
 
     def __init__(self) -> None:
