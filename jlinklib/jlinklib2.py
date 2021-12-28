@@ -202,8 +202,15 @@ def main():
         j = jlinklib2(dll_path=str(path_lib_694d))
         j.close()
 
+        """
+        test load backup (needs pc has no JLink installed for test)
+        """
         fake_lib = pathlib.Path(fake_folder, f'{lib_name}.dll')
-        demo_lib = pathlib.Path('../asset/jlink', f'{lib_name}.dll')
+        demo_lib = pathlib.Path('../asset/jlink/6.94d', f'{lib_name}.dll')
+        j = jlinklib2(dll_path=str(fake_lib), dll_path_backup=str(demo_lib))
+        j.close()
+
+        demo_lib = pathlib.Path('../asset/jlink/7.60b', f'{lib_name}.dll')
         j = jlinklib2(dll_path=str(fake_lib), dll_path_backup=str(demo_lib))
         j.close()
 
