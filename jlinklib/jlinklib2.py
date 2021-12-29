@@ -224,6 +224,28 @@ class jlinklib2:
 
                 cmds.append(jcmd(cmd=cmd, params=params))
         return cmds
+
+    @staticmethod
+    def get_jlink_cmder():
+        libs = []
+        jlink_app = ''
+        from misclib.syslib import syslib
+        if syslib.get_platform() == 'Windows':
+            libs = list(pylink.Library.find_library_windows())
+            jlink_app = 'JLink.exe'
+        elif syslib.get_platform() == 'Linux':
+            libs = list(pylink.Library.find_library_linux())
+            jlink_app = 'JLinkExe'
+        elif syslib.get_platform() == 'OS X':
+            libs = list(pylink.Library.find_library_darwin())
+            jlink_app = 'JLinkExe'
+        if len(libs) > 0 and jlink_app:
+            import pathlib
+            jlink_folder = pathlib.Path(libs[0]).parent
+            return str(pathlib.Path(jlink_folder, jlink_app))
+        else:
+            return ''
+
     # endregion [static]
 
 
