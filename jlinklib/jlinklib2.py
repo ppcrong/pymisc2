@@ -2,6 +2,7 @@ import datetime
 
 import pylink
 
+from jlinklib import jcmd
 from loglib.loglib import loglib
 
 
@@ -91,6 +92,7 @@ class jlinklib2:
         if self.jlink:
             self.jlink.close()
 
+    # region [function]
     def get_lib(self):
         lib = None
         if self.jlink:
@@ -161,6 +163,8 @@ class jlinklib2:
 
         return info
 
+    # endregion [function]
+
     # region [with]
     def __enter__(self):
         self.logger.info()
@@ -169,7 +173,58 @@ class jlinklib2:
     def __exit__(self, exc_type, exc_value, traceback):
         self.logger.info()
         self.close()
+
     # endregion [with]
+
+    # region [static]
+    @staticmethod
+    def parse_jlink_file(file: str):
+        """
+        parse jlink file and get commands
+        https://wiki.segger.com/index.php?title=J-Link_Commander
+
+        Parameters
+        ----------
+        file : str
+            jlink file path
+
+        Returns
+        -------
+        list
+            jlink cmds list
+        """
+        cmds = []
+        with open(file) as f:
+            lines = f.readlines()
+            for line in lines:
+                list_cmd_line = line.split()
+                if len(list_cmd_line) == 0:
+                    continue
+
+                """
+                get cmd
+                """
+                cmd = list_cmd_line[0]
+                list_cmd_line.pop(0)
+                """
+                get params
+                """
+                params = []
+                for param in list_cmd_line:
+                    if cmd == 'loadbin':
+                        # if cmd is loadbin, parse at least 2 params for bin file path and address
+                        bin_params = param.split(sep=',')
+                        if len(bin_params) >= 2:
+                            # file path
+                            params.append(bin_params[0])
+                            # address
+                            params.append(bin_params[1])
+                    else:
+                        params.append(param)
+
+                cmds.append(jcmd(cmd=cmd, params=params))
+        return cmds
+    # endregion [static]
 
 
 def main():
