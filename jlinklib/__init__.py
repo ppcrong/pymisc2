@@ -1,3 +1,12 @@
+import enum
+
+
+class JLINK_EXE(enum.Enum):
+    WINDOWS = 'JLink.exe'
+    LINUX = 'JLinkExe'
+    MACOSX = 'JLinkExe'
+
+
 class jcmd:
     """
     J-Link command
@@ -15,4 +24,3 @@ class jcmd:
         ret_str = '\n\t'.join((ret_str, f'cmd: {self.cmd}'))
         ret_str = '\n\t'.join((ret_str, f'params: {self.params}'))
         return ret_str
-

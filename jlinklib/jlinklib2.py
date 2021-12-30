@@ -2,6 +2,7 @@ import datetime
 
 import pylink
 
+import jlinklib
 from jlinklib import jcmd
 from loglib.loglib import loglib
 
@@ -11,6 +12,7 @@ class jlinklib2:
     v2 wrapper for pylink
     (diff from v1 for behavior change)
     """
+    slogger = loglib(__name__)
 
     def __init__(self,
                  dll_path: str = None,
@@ -229,16 +231,24 @@ class jlinklib2:
     def get_jlink_cmder():
         libs = []
         jlink_app = ''
+
+        """
+        get library path and assign jlink app name according to platform
+        """
         from misclib.syslib import syslib
-        if syslib.get_platform() == 'Windows':
+        if syslib.get_platform() == syslib.OS_WINDOWS:
             libs = list(pylink.Library.find_library_windows())
-            jlink_app = 'JLink.exe'
-        elif syslib.get_platform() == 'Linux':
+            jlink_app = jlinklib.JLINK_EXE.WINDOWS.value
+        elif syslib.get_platform() == syslib.OS_LINUX:
             libs = list(pylink.Library.find_library_linux())
-            jlink_app = 'JLinkExe'
-        elif syslib.get_platform() == 'OS X':
+            jlink_app = jlinklib.JLINK_EXE.LINUX.value
+        elif syslib.get_platform() == syslib.OS_MAC_OSX:
             libs = list(pylink.Library.find_library_darwin())
-            jlink_app = 'JLinkExe'
+            jlink_app = jlinklib.JLINK_EXE.MACOSX.value
+
+        """
+        assemble folder and app name
+        """
         if len(libs) > 0 and jlink_app:
             import pathlib
             jlink_folder = pathlib.Path(libs[0]).parent
@@ -246,6 +256,29 @@ class jlinklib2:
         else:
             return ''
 
+    @staticmethod
+    def open_jlink_cmder(file: str = None):
+        if file:
+            jlink_cmder = file
+        else:
+            jlink_cmder = jlinklib2.get_jlink_cmder()
+
+        jlinklib2.slogger.info(f'J-Link Commander path: {jlink_cmder}')
+        import pathlib
+        if not jlink_cmder or not pathlib.Path(jlink_cmder).exists() or not pathlib.Path(jlink_cmder).is_file():
+            jlinklib2.slogger.error('invalid J-Link Commander path')
+            return False
+
+        from misclib.syslib import syslib
+        import subprocess
+        if syslib.get_platform() == syslib.OS_WINDOWS:
+            subprocess.Popen(['start', pathlib.Path(jlink_cmder).name], shell=True,
+                             cwd=pathlib.Path(jlink_cmder).parent)
+        elif syslib.get_platform() == syslib.OS_LINUX:
+            subprocess.Popen(['open', jlink_cmder], shell=True)
+        elif syslib.get_platform() == syslib.OS_MAC_OSX:
+            subprocess.Popen(['open', jlink_cmder], shell=True)
+        return True
     # endregion [static]
 
 
@@ -263,7 +296,7 @@ def main():
     j = jlinklib2()
     j.close()
 
-    if syslib.get_platform() == 'Windows':
+    if syslib.get_platform() == syslib.OS_WINDOWS:
         lib_name = pylink.Library.get_appropriate_windows_sdk_name()
         path_lib_622c = pathlib.Path(path_lib_622c_folder, f'{lib_name}.dll')
         path_lib_694d = pathlib.Path(path_lib_694d_folder, f'{lib_name}.dll')
@@ -291,7 +324,7 @@ def main():
         j = jlinklib2(dll_path=str(fake_lib), dll_path_backup=str(demo_lib))
         j.close()
 
-    elif syslib.get_platform() == 'Linux':
+    elif syslib.get_platform() == syslib.OS_LINUX:
         with jlinklib2() as j:
             pass
 
