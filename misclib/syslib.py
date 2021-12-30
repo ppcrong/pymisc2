@@ -2,14 +2,18 @@ import sys
 
 
 class syslib:
+    OS_WINDOWS = 'Windows'
+    OS_LINUX = 'Linux'
+    OS_MAC_OSX = 'MacOSX'
+
     @staticmethod
     def get_platform():
         platforms = {
-            'linux': 'Linux',
-            'linux1': 'Linux',
-            'linux2': 'Linux',
-            'darwin': 'OS X',
-            'win32': 'Windows'
+            'linux': syslib.OS_LINUX,
+            'linux1': syslib.OS_LINUX,
+            'linux2': syslib.OS_LINUX,
+            'darwin': syslib.OS_MAC_OSX,
+            'win32': syslib.OS_WINDOWS
         }
         if sys.platform not in platforms:
             return sys.platform
