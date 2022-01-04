@@ -229,6 +229,9 @@ class jlinklib2:
             elif c.cmd == JLINK_CMD.device.name:
                 chip_name = c.params[0]
             else:
+                """
+                ignore other cmds
+                """
                 continue
 
         """
@@ -251,35 +254,31 @@ class jlinklib2:
                 ignore connect params
                 """
                 continue
-            elif c.cmd == JLINK_CMD.r.name:
-                ret, ret_msg = try_catch(self.jlink.reset)()
-                self.logger.info(ret_msg)
-                if type(ret) == bool and not ret:
-                    break
-            elif c.cmd == JLINK_CMD.h.name:
-                ret, ret_msg = try_catch(self.jlink.halt)()
-                self.logger.info(ret_msg)
-                if type(ret) == bool and not ret:
-                    break
-            elif c.cmd == JLINK_CMD.erase.name:
-                ret, ret_msg = try_catch(self.jlink.erase)()
-                self.logger.info(ret_msg)
-                if type(ret) == bool and not ret:
-                    break
-            elif c.cmd == JLINK_CMD.loadbin.name:
-                if base_path:
-                    path = pathlib.Path(base_path, c.params[0])
+            else:
+                if c.cmd == JLINK_CMD.r.name:
+                    ret, ret_msg = try_catch(self.jlink.reset)()
+                elif c.cmd == JLINK_CMD.h.name:
+                    ret, ret_msg = try_catch(self.jlink.halt)()
+                elif c.cmd == JLINK_CMD.erase.name:
+                    ret, ret_msg = try_catch(self.jlink.erase)()
+                elif c.cmd == JLINK_CMD.loadbin.name:
+                    if base_path:
+                        path = pathlib.Path(base_path, c.params[0])
+                    else:
+                        path = c.params[0]
+                    address = int(c.params[1], 16)
+                    ret, ret_msg = try_catch(self.jlink.flash_file)(path=str(path),
+                                                                    addr=address,
+                                                                    on_progress=jlinklib.flash_progress)
+                elif c.cmd == JLINK_CMD.g.name:
+                    ret, ret_msg = try_catch(self.jlink.restart)()
                 else:
-                    path = c.params[0]
-                address = int(c.params[1], 16)
-                ret, ret_msg = try_catch(self.jlink.flash_file)(path=str(path),
-                                                                addr=address,
-                                                                on_progress=jlinklib.flash_progress)
-                self.logger.info(ret_msg)
-                if type(ret) == bool and not ret:
-                    break
-            elif c.cmd == JLINK_CMD.g.name:
-                ret, ret_msg = try_catch(self.jlink.restart)()
+                    """
+                    ignore unsupported cmds
+                    """
+                    self.logger.warning('unsupported jcmd!!!')
+                    continue
+
                 self.logger.info(ret_msg)
                 if type(ret) == bool and not ret:
                     break
