@@ -1,10 +1,12 @@
 import datetime
+import pathlib
 
 import pylink
 
 import jlinklib
-from jlinklib import jcmd
+from jlinklib import jcmd, JLINK_CMD
 from loglib.loglib import loglib
+from misclib import try_catch
 
 
 class jlinklib2:
@@ -104,66 +106,185 @@ class jlinklib2:
     def connect(self,
                 serial_no: int = None,
                 interface=pylink.enums.JLinkInterfaces.SWD,
-                device_xml: str = None,
-                chip_name: str = None,
+                device_xml: str = '',
+                chip_name: str = '',
                 speed: int = 10000,
                 disable_dialog_boxes: bool = True):
+        self.logger.info(f'serial_no: {serial_no}')
+        self.logger.info(f'interface: {interface}')
+        self.logger.info(f'device_xml: {device_xml}')
+        self.logger.info(f'chip_name: {chip_name}')
+        self.logger.info(f'speed: {speed}')
+        self.logger.info(f'disable_dialog_boxes: {disable_dialog_boxes}')
 
         ret = False
         if not self.jlink:
             return ret
 
         while True:
-            try:
-                self.logger.info(f'num_connected_emulators: {self.jlink.num_connected_emulators()}')
-                if disable_dialog_boxes:
-                    self.jlink.disable_dialog_boxes()
-
-                if serial_no:
-                    self.jlink.open(serial_no=serial_no)
-                else:
-                    # so far support first jlink connection info
-                    info = self.get_first_info(jlink=self.jlink)
-                    if info:
-                        # open jlink
-                        self.jlink.open(serial_no=info.SerialNumber)
-                        self.logger.info(f'jlink.firmware_version: {self.jlink.firmware_version}')
-                        self.logger.info(f'jlink.hardware_version: {self.jlink.hardware_version}')
-                    else:
-                        self.logger.error('no jlink connected!!!')
-                        break
-
-                    # set interface (default is SWD)
-                    ret = self.jlink.set_tif(interface)
-                    self.logger.info(f'set_tif({interface}) ret: {ret}')
-
-                    # set device xml path
-                    if device_xml and not device_xml.isspace():
-                        ret_code = self.jlink.exec_command(f'JLinkDevicesXMLPath = {device_xml}')
-                        self.logger.info(f'exec_command (JLinkDevicesXMLPath={device_xml}) ret_code: {ret_code}')
-
-                # connect jlink
-                self.jlink.connect(chip_name=chip_name, speed=speed)
-                self.logger.info(f'core_name: {self.jlink.core_name()}')
-
-            except Exception as e:
-                self.logger.error(f'{type(e).__name__}!!! {e}')
+            ret, ret_msg = try_catch(self.jlink.num_connected_emulators)()
+            self.logger.info(ret_msg)
+            if type(ret) == bool and not ret:
                 break
+            if ret <= 0:
+                self.logger.error('no jlink connected!!!')
+                break
+
+            if disable_dialog_boxes:
+                ret, ret_msg = try_catch(self.jlink.disable_dialog_boxes)()
+                self.logger.info(ret_msg)
+                if type(ret) == bool and not ret:
+                    break
+
+            """
+            open
+            """
+            if serial_no:
+                ret, ret_msg = try_catch(self.jlink.open)(serial_no=serial_no)
+                self.logger.info(ret_msg)
+                if type(ret) == bool and not ret:
+                    break
+            else:
+                # so far support first jlink connection info
+                info = self.get_first_info()
+                if info:
+                    # open jlink
+                    ret, ret_msg = try_catch(self.jlink.open)(serial_no=info.SerialNumber)
+                    self.logger.info(ret_msg)
+                    if type(ret) == bool and not ret:
+                        break
+                    self.logger.info(f'jlink.firmware_version: {self.jlink.firmware_version}')
+                    self.logger.info(f'jlink.hardware_version: {self.jlink.hardware_version}')
+                else:
+                    self.logger.error('no jlink connected!!!')
+                    break
+
+            """
+            set interface (default is SWD)
+            """
+            ret, ret_msg = try_catch(self.jlink.set_tif)(interface=interface)
+            self.logger.info(ret_msg)
+            if type(ret) == bool and not ret:
+                break
+
+            """
+            set device xml path
+            """
+            if device_xml and not device_xml.isspace():
+                ret, ret_msg = try_catch(self.jlink.exec_command)(cmd=f'JLinkDevicesXMLPath = {device_xml}')
+                self.logger.info(ret_msg)
+                if type(ret) == bool and not ret:
+                    break
+
+            """
+            connect jlink
+            """
+            ret, ret_msg = try_catch(self.jlink.connect)(chip_name=chip_name, speed=speed)
+            self.logger.info(ret_msg)
+            if type(ret) == bool and not ret:
+                break
+
+            ret = True
+            self.logger.info(f'core_name: {self.jlink.core_name()}')
 
             break
 
         return ret
 
-    def get_first_info(self, jlink: pylink.JLink):
+    def get_first_info(self):
         info = None
-        info_list = jlink.connected_emulators()
-        for i, item in enumerate(info_list):
+        ret, ret_msg = try_catch(self.jlink.connected_emulators)()
+        if type(ret) == bool and not ret:
+            return info
+
+        for i, item in enumerate(ret):
             self.logger.info(f'JLinkConnectInfo[{i}]: {item}')
 
-        if len(info_list) > 0:
-            info = info_list[0]
+        if len(ret) > 0:
+            info = ret[0]
 
         return info
+
+    def process_jlink_cmds(self,
+                           jcmds: list[jcmd],
+                           device_xml: str = '',
+                           base_path: str = ''
+                           ):
+        ret = False
+        if not jcmds or len(jcmds) <= 0:
+            self.logger.warning('cmds are invalid or empty!!!')
+            return ret
+
+        """
+        collect connect params
+        """
+        interface: int = pylink.enums.JLinkInterfaces.SWD
+        chip_name: str = ''
+        speed: int = 10000
+        for c in jcmds:
+            if c.cmd == JLINK_CMD.si.name:
+                interface = int(c.params[0])
+            elif c.cmd == JLINK_CMD.speed.name:
+                speed = int(c.params[0])
+            elif c.cmd == JLINK_CMD.device.name:
+                chip_name = c.params[0]
+            else:
+                continue
+
+        """
+        connect
+        """
+        ret = self.connect(interface=interface,
+                           device_xml=device_xml,
+                           chip_name=chip_name,
+                           speed=speed)
+        if not ret:
+            self.logger.error('connect fail!!!')
+            return ret
+
+        """
+        process remaining cmds
+        """
+        for c in jcmds:
+            if c.cmd == JLINK_CMD.si.name or c.cmd == JLINK_CMD.speed.name or c.cmd == JLINK_CMD.device.name:
+                """
+                ignore connect params
+                """
+                continue
+            elif c.cmd == JLINK_CMD.r.name:
+                ret, ret_msg = try_catch(self.jlink.reset)()
+                self.logger.info(ret_msg)
+                if type(ret) == bool and not ret:
+                    break
+            elif c.cmd == JLINK_CMD.h.name:
+                ret, ret_msg = try_catch(self.jlink.halt)()
+                self.logger.info(ret_msg)
+                if type(ret) == bool and not ret:
+                    break
+            elif c.cmd == JLINK_CMD.erase.name:
+                ret, ret_msg = try_catch(self.jlink.erase)()
+                self.logger.info(ret_msg)
+                if type(ret) == bool and not ret:
+                    break
+            elif c.cmd == JLINK_CMD.loadbin.name:
+                if base_path:
+                    path = pathlib.Path(base_path, c.params[0])
+                else:
+                    path = c.params[0]
+                address = int(c.params[1], 16)
+                ret, ret_msg = try_catch(self.jlink.flash_file)(path=str(path),
+                                                                addr=address,
+                                                                on_progress=jlinklib.flash_progress)
+                self.logger.info(ret_msg)
+                if type(ret) == bool and not ret:
+                    break
+            elif c.cmd == JLINK_CMD.g.name:
+                ret, ret_msg = try_catch(self.jlink.restart)()
+                self.logger.info(ret_msg)
+                if type(ret) == bool and not ret:
+                    break
+
+        return ret
 
     # endregion [function]
 
@@ -250,7 +371,6 @@ class jlinklib2:
         assemble folder and app name
         """
         if len(libs) > 0 and jlink_app:
-            import pathlib
             jlink_folder = pathlib.Path(libs[0]).parent
             return str(pathlib.Path(jlink_folder, jlink_app))
         else:
