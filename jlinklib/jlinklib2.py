@@ -15,30 +15,30 @@ class jlinklib2:
     slogger = loglib(__name__)
 
     def __init__(self,
-                 dll_path: str = None,
-                 dll_path_backup: str = None):
+                 lib_path: str = None,
+                 lib_path_backup: str = None):
         super().__init__()
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S.%f')
         self.logger = loglib(f'{__name__}_time{timestamp}')
-        self.jlink = self.init(dll_path=dll_path, dll_path_backup=dll_path_backup)
+        self.jlink = self.init(lib_path=lib_path, lib_path_backup=lib_path_backup)
 
     def init(self,
-             dll_path: str = None,
-             dll_path_backup: str = None):
+             lib_path: str = None,
+             lib_path_backup: str = None):
         """
-        1. load dll_path
-        2. load installed jlink dll
-        3. load dll_path_backup
+        1. load lib_path
+        2. load installed jlink library
+        3. load lib_path_backup
         """
         jlink = None
         while True:
 
             """
-            load dll_path
+            load lib_path
             """
-            if dll_path and not dll_path.isspace():
+            if lib_path and not lib_path.isspace():
                 try:
-                    lib = pylink.Library(dllpath=dll_path)
+                    lib = pylink.Library(dllpath=lib_path)
                     jlink = pylink.JLink(lib=lib)
                 except Exception as e:
                     self.logger.warning(f'{type(e).__name__}!!! {e}')
@@ -46,12 +46,12 @@ class jlinklib2:
                 if jlink:
                     break
                 else:
-                    self.logger.warning(f'cannot load dll_path: {dll_path}')
+                    self.logger.warning(f'cannot load lib_path: {lib_path}')
             else:
-                self.logger.warning('dll_path is empty')
+                self.logger.warning('lib_path is empty')
 
             """
-            load installed jlink dll
+            load installed jlink library
             """
             try:
                 jlink = pylink.JLink()
@@ -61,14 +61,14 @@ class jlinklib2:
             if jlink:
                 break
             else:
-                self.logger.warning(f'no default J-Link installed!!! next load dll_path_backup: {dll_path_backup}...')
+                self.logger.warning(f'no default J-Link installed!!! next load lib_path_backup: {lib_path_backup}...')
 
             """
-            load dll_path_backup
+            load lib_path_backup
             """
-            if dll_path_backup and not dll_path_backup.isspace():
+            if lib_path_backup and not lib_path_backup.isspace():
                 try:
-                    lib = pylink.Library(dllpath=dll_path_backup)
+                    lib = pylink.Library(dllpath=lib_path_backup)
                     jlink = pylink.JLink(lib=lib)
                 except Exception as e:
                     self.logger.warning(f'{type(e).__name__}!!! {e}')
@@ -76,9 +76,9 @@ class jlinklib2:
                 if jlink:
                     break
                 else:
-                    self.logger.warning(f'cannot load dll_path_backup: {dll_path_backup}')
+                    self.logger.warning(f'cannot load lib_path_backup: {lib_path_backup}')
             else:
-                self.logger.warning('dll_path_backup is empty')
+                self.logger.warning('lib_path_backup is empty')
 
             break
 
@@ -303,13 +303,13 @@ def main():
         """
         load jlink 622c
         """
-        j = jlinklib2(dll_path=str(path_lib_622c))
+        j = jlinklib2(lib_path=str(path_lib_622c))
         j.close()
 
         """
         load jlink 694d
         """
-        j = jlinklib2(dll_path=str(path_lib_694d))
+        j = jlinklib2(lib_path=str(path_lib_694d))
         j.close()
 
         """
@@ -317,11 +317,11 @@ def main():
         """
         fake_lib = pathlib.Path(fake_folder, f'{lib_name}.dll')
         demo_lib = pathlib.Path('../asset/jlink/6.94d', f'{lib_name}.dll')
-        j = jlinklib2(dll_path=str(fake_lib), dll_path_backup=str(demo_lib))
+        j = jlinklib2(lib_path=str(fake_lib), lib_path_backup=str(demo_lib))
         j.close()
 
         demo_lib = pathlib.Path('../asset/jlink/7.60b', f'{lib_name}.dll')
-        j = jlinklib2(dll_path=str(fake_lib), dll_path_backup=str(demo_lib))
+        j = jlinklib2(lib_path=str(fake_lib), lib_path_backup=str(demo_lib))
         j.close()
 
     elif syslib.get_platform() == syslib.OS_LINUX:
