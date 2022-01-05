@@ -271,8 +271,8 @@ class jlinklib2:
             """
             if self.flash_progress:
                 self.flash_progress(percent=percentage,
-                                    text=text,
-                                    text2=text2)
+                                    action=text,
+                                    progress_string=text2)
 
         ret = False
         if not jcmds or len(jcmds) <= 0:
