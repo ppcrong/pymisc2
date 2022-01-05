@@ -68,23 +68,19 @@ class printlib:
         sys.stdout.flush()
 
     @staticmethod
-    def draw_percent2(percent, text, text2, bar_len=20):
+    def draw_percent2(percent: int, text: str, text2: str, bar_len: int = 20):
         import sys
         sys.stdout.write('\r')
         progress = ''
         for i in range(bar_len):
-            if i < int(bar_len * percent):
+            if i < int(bar_len * percent / 100):
                 progress += '='
             else:
                 progress += ' '
 
         if not text:
             text = ''
-        else:
-            text = text.decode('ascii')
         if not text2:
             text2 = ''
-        else:
-            text2 = text2.decode('ascii')
-        sys.stdout.write(f'[ {progress} ] {percent * 100:.2f}%...{text}...{text2}')
+        sys.stdout.write(f'[ {progress} ] {percent}%...{text}...{text2}')
         sys.stdout.flush()
