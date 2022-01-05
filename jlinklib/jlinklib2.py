@@ -117,7 +117,7 @@ class jlinklib2:
             self.logger.i1(msg=text)
 
         if self.status:
-            self.status(ret, text)
+            self.status(ret=ret, text=text)
 
     def get_lib(self):
         lib = None
