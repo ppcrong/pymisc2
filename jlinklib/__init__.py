@@ -1,13 +1,6 @@
 import enum
 
 
-def flash_progress(action, progress_string, percentage):
-    from loglib.printlib import printlib
-    printlib.draw_percent2(percent=percentage / 100,
-                           text=action,
-                           text2=progress_string)
-
-
 class JLINK_EXE(enum.Enum):
     WINDOWS = 'JLink.exe'
     LINUX = 'JLinkExe'
