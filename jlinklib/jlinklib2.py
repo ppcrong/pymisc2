@@ -250,29 +250,29 @@ class jlinklib2:
                            ):
         def on_progress(action: bytes, progress_string: bytes, percentage: int):
             if not action:
-                text = ''
+                action = ''
             else:
-                text = action.decode('ascii')
+                action = action.decode('ascii')
             if not progress_string:
-                text2 = ''
+                progress_string = ''
             else:
-                text2 = progress_string.decode('ascii')
+                progress_string = progress_string.decode('ascii')
 
             """
             draw flash progress in console
             """
             from loglib.printlib import printlib
             printlib.draw_percent2(percent=percentage,
-                                   text=text,
-                                   text2=text2)
+                                   text=action,
+                                   text2=progress_string)
 
             """
             draw flash progress on ui
             """
             if self.flash_progress:
                 self.flash_progress(percent=percentage,
-                                    action=text,
-                                    progress_string=text2)
+                                    action=action,
+                                    progress_string=progress_string)
 
         ret = False
         if not jcmds or len(jcmds) <= 0:
