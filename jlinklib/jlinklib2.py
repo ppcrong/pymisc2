@@ -380,7 +380,7 @@ class jlinklib2:
             jlink cmds list
         """
         if not file or not pathlib.Path(file).is_file() or not file.endswith('.jlink'):
-            jlinklib2.slogger.error(f'{file} is invalid!!!')
+            jlinklib2.slogger.error(f'file: {file} is invalid!!!')
             return None
 
         cmds = []
