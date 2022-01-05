@@ -117,7 +117,7 @@ class jlinklib2:
             self.logger.i1(msg=text)
 
         if self.status:
-            self.status(ret=ret, text=text)
+            self.status.emit(ret, text)
 
     def get_lib(self):
         lib = None
@@ -270,9 +270,9 @@ class jlinklib2:
             draw flash progress on ui
             """
             if self.flash_progress:
-                self.flash_progress(percent=percentage,
-                                    action=action,
-                                    progress_string=progress_string)
+                self.flash_progress.emit(percentage,
+                                         action,
+                                         progress_string)
 
         ret = False
         if not jcmds or len(jcmds) <= 0:

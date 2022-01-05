@@ -31,7 +31,8 @@ class jcmd:
         self.params = params
 
     def __repr__(self) -> str:
-        ret_str = super().__repr__()
+        ret_str = ''
         ret_str = '\n\t'.join((ret_str, f'cmd: {self.cmd}'))
-        ret_str = '\n\t'.join((ret_str, f'params: {self.params}'))
+        if self.params and len(self.params) > 0:
+            ret_str = '\n\t'.join((ret_str, f'params: {self.params}'))
         return ret_str
