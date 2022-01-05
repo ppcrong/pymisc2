@@ -2,6 +2,7 @@ import datetime
 import pathlib
 
 import pylink
+from PyQt5.QtCore import pyqtSignal
 
 import jlinklib
 from jlinklib import jcmd, JLINK_CMD
@@ -15,14 +16,26 @@ class jlinklib2:
     (diff from v1 for behavior change)
     """
     slogger = loglib(__name__)
+    flash_progress = pyqtSignal(int, str, str)
+    status = pyqtSignal(str)
 
     def __init__(self,
                  lib_path: str = None,
-                 lib_path_backup: str = None):
+                 lib_path_backup: str = None,
+                 flash_progress: pyqtSignal = None,
+                 status: pyqtSignal = None):
         super().__init__()
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S.%f')
         self.logger = loglib(f'{__name__}_time{timestamp}')
         self.jlink = self.init(lib_path=lib_path, lib_path_backup=lib_path_backup)
+        if flash_progress:
+            self.flash_progress = flash_progress
+        else:
+            self.flash_progress = None
+        if status:
+            self.status = status
+        else:
+            self.status = None
 
     def init(self,
              lib_path: str = None,
@@ -97,6 +110,15 @@ class jlinklib2:
             self.jlink.close()
 
     # region [function]
+    def print_status(self, ret, text: str = ''):
+        if type(ret) == bool and not ret:
+            self.logger.e1(msg=text)
+        else:
+            self.logger.i1(msg=text)
+
+        if self.status:
+            self.status(ret, text)
+
     def get_lib(self):
         lib = None
         if self.jlink:
@@ -123,16 +145,16 @@ class jlinklib2:
 
         while True:
             ret, ret_msg = try_catch(self.jlink.num_connected_emulators)()
-            self.logger.info(ret_msg)
+            self.print_status(ret=ret, text=ret_msg)
             if type(ret) == bool and not ret:
                 break
             if ret <= 0:
-                self.logger.error('no jlink connected!!!')
+                self.print_status(ret=False, text='no jlink connected!!!')
                 break
 
             if disable_dialog_boxes:
                 ret, ret_msg = try_catch(self.jlink.disable_dialog_boxes)()
-                self.logger.info(ret_msg)
+                self.print_status(ret=ret, text=ret_msg)
                 if type(ret) == bool and not ret:
                     break
 
@@ -141,7 +163,7 @@ class jlinklib2:
             """
             if serial_no:
                 ret, ret_msg = try_catch(self.jlink.open)(serial_no=serial_no)
-                self.logger.info(ret_msg)
+                self.print_status(ret=ret, text=ret_msg)
                 if type(ret) == bool and not ret:
                     break
             else:
@@ -150,20 +172,20 @@ class jlinklib2:
                 if info:
                     # open jlink
                     ret, ret_msg = try_catch(self.jlink.open)(serial_no=info.SerialNumber)
-                    self.logger.info(ret_msg)
+                    self.print_status(ret=ret, text=ret_msg)
                     if type(ret) == bool and not ret:
                         break
                     self.logger.info(f'jlink.firmware_version: {self.jlink.firmware_version}')
                     self.logger.info(f'jlink.hardware_version: {self.jlink.hardware_version}')
                 else:
-                    self.logger.error('no jlink connected!!!')
+                    self.print_status(ret=False, text='no jlink connected!!!')
                     break
 
             """
             set interface (default is SWD)
             """
             ret, ret_msg = try_catch(self.jlink.set_tif)(interface=interface)
-            self.logger.info(ret_msg)
+            self.print_status(ret=ret, text=ret_msg)
             if type(ret) == bool and not ret:
                 break
 
@@ -172,7 +194,7 @@ class jlinklib2:
             """
             if device_xml and not device_xml.isspace():
                 ret, ret_msg = try_catch(self.jlink.exec_command)(cmd=f'JLinkDevicesXMLPath = {device_xml}')
-                self.logger.info(ret_msg)
+                self.print_status(ret=ret, text=ret_msg)
                 if type(ret) == bool and not ret:
                     break
 
@@ -180,7 +202,7 @@ class jlinklib2:
             connect jlink
             """
             ret, ret_msg = try_catch(self.jlink.connect)(chip_name=chip_name, speed=speed)
-            self.logger.info(ret_msg)
+            self.print_status(ret=ret, text=ret_msg)
             if type(ret) == bool and not ret:
                 break
 
@@ -205,14 +227,56 @@ class jlinklib2:
 
         return info
 
+    @staticmethod
+    def get_device_name(jcmds: list[jcmd]):
+        if not jcmds or len(jcmds) <= 0:
+            jlinklib2.slogger.warning('cmds are invalid or empty!!!')
+            return ''
+
+        chip_name: str = ''
+        for c in jcmds:
+            if c.cmd == JLINK_CMD.device.name:
+                chip_name = c.params[0]
+                break
+            else:
+                continue
+
+        return chip_name
+
     def process_jlink_cmds(self,
                            jcmds: list[jcmd],
                            device_xml: str = '',
                            base_path: str = ''
                            ):
+        def on_progress(action: bytes, progress_string: bytes, percentage: int):
+            if not action:
+                text = ''
+            else:
+                text = action.decode('ascii')
+            if not progress_string:
+                text2 = ''
+            else:
+                text2 = progress_string.decode('ascii')
+
+            """
+            draw flash progress in console
+            """
+            from loglib.printlib import printlib
+            printlib.draw_percent2(percent=percentage,
+                                   text=text,
+                                   text2=text2)
+
+            """
+            draw flash progress on ui
+            """
+            if self.flash_progress:
+                self.flash_progress(percent=percentage,
+                                    text=text,
+                                    text2=text2)
+
         ret = False
         if not jcmds or len(jcmds) <= 0:
-            self.logger.warning('cmds are invalid or empty!!!')
+            self.print_status(ret=ret, text='cmds are invalid or empty!!!')
             return ret
 
         """
@@ -269,17 +333,17 @@ class jlinklib2:
                     address = int(c.params[1], 16)
                     ret, ret_msg = try_catch(self.jlink.flash_file)(path=str(path),
                                                                     addr=address,
-                                                                    on_progress=jlinklib.flash_progress)
+                                                                    on_progress=on_progress)
                 elif c.cmd == JLINK_CMD.g.name:
                     ret, ret_msg = try_catch(self.jlink.restart)()
                 else:
                     """
                     ignore unsupported cmds
                     """
-                    self.logger.warning('unsupported jcmd!!!')
+                    self.print_status(ret=False, text='unsupported jcmd!!!')
                     continue
 
-                self.logger.info(ret_msg)
+                self.print_status(ret=ret, text=ret_msg)
                 if type(ret) == bool and not ret:
                     break
 
