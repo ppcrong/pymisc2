@@ -163,6 +163,7 @@ class serlib(QThread):
             return
 
         while self.is_opened():
+            self.msleep(10)
             size = self.in_waiting()
             # self.logger.info(f'size: {size}')
             if size:
@@ -184,6 +185,7 @@ class serlib(QThread):
             return
 
         while self.is_opened():
+            self.msleep(10)
             if len(self.bufw) > 0:
                 self.write(self.bufw.pop())
 
