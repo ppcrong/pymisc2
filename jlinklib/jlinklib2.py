@@ -336,6 +336,8 @@ class jlinklib2:
                                                                     on_progress=on_progress)
                 elif c.cmd == JLINK_CMD.g.name:
                     ret, ret_msg = try_catch(self.jlink.restart)()
+                elif c.cmd == JLINK_CMD.exit.name:
+                    ret, ret_msg = True, '[exit] ignore...'
                 else:
                     """
                     ignore unsupported cmds

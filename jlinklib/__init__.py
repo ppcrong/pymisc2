@@ -16,6 +16,7 @@ class JLINK_CMD(enum.Enum):
     erase = 'erase'
     loadbin = 'loadbin'
     g = 'go'
+    exit = 'exit'
 
 
 class jcmd:
