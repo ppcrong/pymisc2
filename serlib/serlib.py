@@ -16,6 +16,7 @@ class serlib(QThread):
     """
 
     read_received = pyqtSignal(str)
+    all_done = pyqtSignal()
 
     def __init__(self,
                  port: str,
@@ -30,6 +31,7 @@ class serlib(QThread):
                  dsrdtr: bool = False,
                  inter_byte_timeout: int = None,
                  read_received=None,
+                 all_done=None,
                  console_show_read: bool = False
                  ):
         super().__init__()
@@ -43,6 +45,10 @@ class serlib(QThread):
             self.read_received.connect(read_received)
         else:
             self.read_received = None
+        if all_done:
+            self.all_done.connect(all_done)
+        else:
+            self.all_done = None
         self.console_show_read = console_show_read
         try:
             self.serial = serial.Serial(port=port,
@@ -153,6 +159,7 @@ class serlib(QThread):
             executor.submit(self.write_thread)
             executor.submit(self.read_thread)
         self.logger.info('all done!!!')
+        self.all_done.emit()
 
     def read_thread(self):
         """
