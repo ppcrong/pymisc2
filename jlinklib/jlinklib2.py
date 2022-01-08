@@ -403,7 +403,7 @@ class jlinklib2:
                 """
                 params = []
                 for param in list_cmd_line:
-                    if cmd == 'loadbin':
+                    if cmd == JLINK_CMD.loadbin.value:
                         # if cmd is loadbin, parse at least 2 params for bin file path and address
                         bin_params = param.split(sep=',')
                         if len(bin_params) >= 2:
