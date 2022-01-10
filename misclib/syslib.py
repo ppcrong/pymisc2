@@ -4,7 +4,7 @@ import sys
 class syslib:
     OS_WINDOWS = 'Windows'
     OS_LINUX = 'Linux'
-    OS_MAC_OSX = 'MacOSX'
+    OS_MAC_OSX = 'Darwin'
 
     @staticmethod
     def get_platform():
@@ -19,6 +19,11 @@ class syslib:
             return sys.platform
 
         return platforms[sys.platform]
+
+    @staticmethod
+    def get_platform2():
+        import platform
+        return platform.system()
 
     @staticmethod
     def is_raspberry_pi():
