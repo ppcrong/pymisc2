@@ -6,18 +6,37 @@ class threadlib:
 
     def __init__(self):
         super().__init__()
+        self.execute_cmd_thread = None
         self.execute_bat_thread = None
         self.execute_python3_thread = None
 
-    def execute_bat(self,
-                    bat: str,
+    def execute_cmd(self,
+                    app: str,
+                    cmds: list,
+                    cwd: str,
                     cb_done):
+        args = [app]
+        if cmds and len(cmds) > 0:
+            args.extend(cmds)
         import subprocess
-        ex = subprocess.Popen([bat], stdout=subprocess.PIPE, shell=True, cwd=Path(bat).parent)
+        ex = subprocess.Popen(args=args, stdout=subprocess.PIPE, shell=True, cwd=cwd)
         stdout, stderr = ex.communicate()
         status = ex.wait()
         if cb_done:
             cb_done(stdout, stderr, status)
+
+    def execute_cmd_async(self,
+                          app: str,
+                          cmds: list,
+                          cwd: str,
+                          cb_done):
+        self.execute_cmd_thread = Thread(target=self.execute_cmd, args=(app, cmds, cwd, cb_done))
+        self.execute_cmd_thread.start()
+
+    def execute_bat(self,
+                    bat: str,
+                    cb_done):
+        self.execute_cmd(app=bat, cmds=[], cwd=str(Path(bat).parent), cb_done=cb_done)
 
     def execute_bat_async(self,
                           bat: str,
@@ -29,14 +48,7 @@ class threadlib:
                         cmds: list,
                         cwd: str,
                         cb_done):
-        args = ['python3']
-        args.extend(cmds)
-        import subprocess
-        ex = subprocess.Popen(args=args, stdout=subprocess.PIPE, shell=True, cwd=cwd)
-        stdout, stderr = ex.communicate()
-        status = ex.wait()
-        if cb_done:
-            cb_done(stdout, stderr, status)
+        self.execute_cmd(app='python3', cmds=cmds, cwd=cwd, cb_done=cb_done)
 
     def execute_python3_async(self,
                               cmds: list,
