@@ -426,13 +426,13 @@ class jlinklib2:
         get library path and assign jlink app name according to platform
         """
         from misclib.syslib import syslib
-        if syslib.get_platform() == syslib.OS_WINDOWS:
+        if syslib.get_platform2() == syslib.OS_WINDOWS:
             libs = list(pylink.Library.find_library_windows())
             jlink_app = jlinklib.JLINK_EXE.WINDOWS.value
-        elif syslib.get_platform() == syslib.OS_LINUX:
+        elif syslib.get_platform2() == syslib.OS_LINUX:
             libs = list(pylink.Library.find_library_linux())
             jlink_app = jlinklib.JLINK_EXE.LINUX.value
-        elif syslib.get_platform() == syslib.OS_MAC_OSX:
+        elif syslib.get_platform2() == syslib.OS_MAC_OSX:
             libs = list(pylink.Library.find_library_darwin())
             jlink_app = jlinklib.JLINK_EXE.MACOSX.value
 
@@ -460,12 +460,12 @@ class jlinklib2:
 
         from misclib.syslib import syslib
         import subprocess
-        if syslib.get_platform() == syslib.OS_WINDOWS:
+        if syslib.get_platform2() == syslib.OS_WINDOWS:
             subprocess.Popen(['start', pathlib.Path(jlink_cmder).name], shell=True,
                              cwd=pathlib.Path(jlink_cmder).parent)
-        elif syslib.get_platform() == syslib.OS_LINUX:
+        elif syslib.get_platform2() == syslib.OS_LINUX:
             subprocess.Popen(['open', jlink_cmder], shell=True)
-        elif syslib.get_platform() == syslib.OS_MAC_OSX:
+        elif syslib.get_platform2() == syslib.OS_MAC_OSX:
             subprocess.Popen(['open', jlink_cmder], shell=True)
         return True
     # endregion [static]
@@ -485,7 +485,7 @@ def main():
     j = jlinklib2()
     j.close()
 
-    if syslib.get_platform() == syslib.OS_WINDOWS:
+    if syslib.get_platform2() == syslib.OS_WINDOWS:
         lib_name = pylink.Library.get_appropriate_windows_sdk_name()
         path_lib_622c = pathlib.Path(path_lib_622c_folder, f'{lib_name}.dll')
         path_lib_694d = pathlib.Path(path_lib_694d_folder, f'{lib_name}.dll')
@@ -513,7 +513,7 @@ def main():
         j = jlinklib2(lib_path=str(fake_lib), lib_path_backup=str(demo_lib))
         j.close()
 
-    elif syslib.get_platform() == syslib.OS_LINUX:
+    elif syslib.get_platform2() == syslib.OS_LINUX:
         with jlinklib2() as j:
             pass
 
