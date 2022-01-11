@@ -15,7 +15,13 @@ class threadlib:
                     cmds: list,
                     cwd: str,
                     cb_done):
-        args = [app]
+        """
+        execute command
+        """
+        """
+        [workaround] cd to cwd and then execute app
+        """
+        args = ['cd', '/d', Path(cwd).absolute(), '&&', app]
         if cmds and len(cmds) > 0:
             args.extend(cmds)
         import subprocess
