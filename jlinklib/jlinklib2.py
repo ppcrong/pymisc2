@@ -461,8 +461,12 @@ class jlinklib2:
         from misclib.syslib import syslib
         import subprocess
         if syslib.get_platform2() == syslib.OS_WINDOWS:
-            subprocess.Popen(['start', pathlib.Path(jlink_cmder).name], shell=True,
-                             cwd=pathlib.Path(jlink_cmder).parent)
+            cwd = pathlib.Path(jlink_cmder).parent
+            """
+            [workaround] cd to cwd and then execute app
+            """
+            args = ['cd', '/d', cwd.absolute(), '&&', 'start', str(pathlib.Path(jlink_cmder).name)]
+            subprocess.Popen(args, shell=True, cwd=cwd)
         elif syslib.get_platform2() == syslib.OS_LINUX:
             subprocess.Popen(['open', jlink_cmder], shell=True)
         elif syslib.get_platform2() == syslib.OS_MAC_OSX:
