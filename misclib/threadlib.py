@@ -19,8 +19,17 @@ class threadlib:
         if cmds and len(cmds) > 0:
             args.extend(cmds)
         import subprocess
-        ex = subprocess.Popen(args=args, stdout=subprocess.PIPE, shell=True, cwd=cwd)
-        stdout, stderr = ex.communicate()
+        ex = subprocess.Popen(args=args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, cwd=cwd)
+        """
+        [symptom]
+            ex.communicate is blocked when jlink.exe cannot be found, windows will pop-up msgbox, the thing is,
+            it seems like a cmd window to execute 'start jlink.exe', after close msgbox, cmd window will stop
+            at the message 'press any key to continue...', that's why communicate is blocked and not returned.
+        [workaround]
+            1. add stdin in Popen
+            2. add input in communicate, just similar to input 'q' to cmd window
+        """
+        stdout, stderr = ex.communicate(input='q'.encode())
         status = ex.wait()
         if cb_done:
             cb_done(stdout, stderr, status)
