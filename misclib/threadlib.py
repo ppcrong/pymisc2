@@ -25,7 +25,7 @@ class threadlib:
         if cmds and len(cmds) > 0:
             args.extend(cmds)
         import subprocess
-        ex = subprocess.Popen(args=args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True, cwd=cwd)
+        ex = subprocess.Popen(args=args, shell=True, cwd=cwd)
         """
         [symptom]
             ex.communicate is blocked when jlink.exe cannot be found, windows will pop-up msgbox, the thing is,
