@@ -63,7 +63,14 @@ class threadlib:
                         cmds: list,
                         cwd: str,
                         cb_done):
-        self.execute_cmd(app='python3', cmds=cmds, cwd=cwd, cb_done=cb_done)
+        cmds.insert(0, '-3')  # py -3 for python3
+        """
+        [symptom]
+            python3 cmd has some problem when using in multiple python3 installed environment
+        [solution] use py -3 as below
+            py -3 cmds[]
+        """
+        self.execute_cmd(app='py', cmds=cmds, cwd=cwd, cb_done=cb_done)
 
     def execute_python3_async(self,
                               cmds: list,
