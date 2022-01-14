@@ -101,7 +101,7 @@ class jlinklib2:
             self.logger.info(f'jlink.version: {jlink.version}')
             self.logger.info(f'jlink.lib: {jlink._library._path}')
         else:
-            self.logger.error(f'failed to get jlink!!!')
+            self.logger.error(f'failed to get jlink!!! please make sure J-Link is installed on your PC')
 
         return jlink
 
@@ -351,6 +351,8 @@ class jlinklib2:
 
         return ret
 
+    def get_jlink(self):
+        return self.jlink
     # endregion [function]
 
     # region [with]
