@@ -2,6 +2,8 @@ from pathlib import Path
 from threading import Thread
 from typing import Union
 
+from loglib.loglib import loglib
+
 
 class threadlib:
 
@@ -10,6 +12,7 @@ class threadlib:
         self.execute_cmd_thread: Union[Thread, None] = None
         self.execute_bat_thread: Union[Thread, None] = None
         self.execute_python3_thread: Union[Thread, None] = None
+        self.logger = loglib(f'{__name__}_{self}')
 
     def execute_cmd(self,
                     app: str,
@@ -22,11 +25,22 @@ class threadlib:
         """
         [workaround] cd to cwd and then execute app
         """
-        args = ['cd', '/d', Path(cwd).absolute(), '&&', app]
+        from misclib.syslib import syslib
+        if syslib.get_platform2() == syslib.OS_WINDOWS:
+            cmd_current_path = 'cd'
+        else:
+            cmd_current_path = 'pwd'
+        args = ['cd', '/d', str(Path(cwd).absolute()), '&&', cmd_current_path, '&&', app]
         if cmds and len(cmds) > 0:
             args.extend(cmds)
+        self.logger.info(f'args: {args}')
+
+        """
+        run
+        """
         import subprocess
         ex = subprocess.Popen(args=args, shell=True, cwd=cwd)
+
         """
         [symptom]
             ex.communicate is blocked when jlink.exe cannot be found, windows will pop-up msgbox, the thing is,
@@ -58,7 +72,7 @@ class threadlib:
     def execute_bat(self,
                     bat: str,
                     cb_done):
-        self.execute_cmd(app=bat, cmds=[], cwd=str(Path(bat).parent), cb_done=cb_done)
+        self.execute_cmd(app=Path(bat).name, cmds=[], cwd=str(Path(bat).parent), cb_done=cb_done)
 
     def execute_bat_async(self,
                           bat: str,
@@ -97,4 +111,3 @@ class threadlib:
             return self.execute_python3_thread.is_alive()
         else:
             return False
-
