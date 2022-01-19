@@ -52,6 +52,8 @@ class threadlib:
     def is_cmd_thread_running(self):
         if self.execute_cmd_thread:
             return self.execute_cmd_thread.is_alive()
+        else:
+            return False
 
     def execute_bat(self,
                     bat: str,
@@ -67,6 +69,8 @@ class threadlib:
     def is_bat_thread_running(self):
         if self.execute_bat_thread:
             return self.execute_bat_thread.is_alive()
+        else:
+            return False
 
     def execute_python3(self,
                         cmds: list,
@@ -91,4 +95,6 @@ class threadlib:
     def is_python3_thread_running(self):
         if self.execute_python3_thread:
             return self.execute_python3_thread.is_alive()
+        else:
+            return False
 
