@@ -1,14 +1,15 @@
 from pathlib import Path
 from threading import Thread
+from typing import Union
 
 
 class threadlib:
 
     def __init__(self):
         super().__init__()
-        self.execute_cmd_thread = None
-        self.execute_bat_thread = None
-        self.execute_python3_thread = None
+        self.execute_cmd_thread: Union[Thread, None] = None
+        self.execute_bat_thread: Union[Thread, None] = None
+        self.execute_python3_thread: Union[Thread, None] = None
 
     def execute_cmd(self,
                     app: str,
@@ -48,6 +49,10 @@ class threadlib:
         self.execute_cmd_thread = Thread(target=self.execute_cmd, args=(app, cmds, cwd, cb_done))
         self.execute_cmd_thread.start()
 
+    def is_cmd_thread_running(self):
+        if self.execute_cmd_thread:
+            return self.execute_cmd_thread.is_alive()
+
     def execute_bat(self,
                     bat: str,
                     cb_done):
@@ -58,6 +63,10 @@ class threadlib:
                           cb_done):
         self.execute_bat_thread = Thread(target=self.execute_bat, args=(bat, cb_done))
         self.execute_bat_thread.start()
+
+    def is_bat_thread_running(self):
+        if self.execute_bat_thread:
+            return self.execute_bat_thread.is_alive()
 
     def execute_python3(self,
                         cmds: list,
@@ -78,3 +87,8 @@ class threadlib:
                               cb_done):
         self.execute_python3_thread = Thread(target=self.execute_python3, args=(cmds, cwd, cb_done))
         self.execute_python3_thread.start()
+
+    def is_python3_thread_running(self):
+        if self.execute_python3_thread:
+            return self.execute_python3_thread.is_alive()
+
