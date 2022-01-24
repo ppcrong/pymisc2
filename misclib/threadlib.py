@@ -15,7 +15,6 @@ class threadlib:
         self.logger = loglib(f'{__name__}_{self}')
 
     def execute_cmd(self,
-                    app: str,
                     cmds: list,
                     cwd: str,
                     cb_done):
@@ -30,8 +29,9 @@ class threadlib:
             cmd_current_path = 'cd'
         else:
             cmd_current_path = 'pwd'
-        args = ['cd', '/d', str(Path(cwd).absolute()), '&&', cmd_current_path, '&&', app]
+        args = ['cd', '/d', str(Path(cwd).absolute()), '&&', cmd_current_path]
         if cmds and len(cmds) > 0:
+            args.append('&&')
             args.extend(cmds)
         self.logger.info(f'args: {args}')
 
@@ -56,11 +56,10 @@ class threadlib:
             cb_done(stdout, stderr, status)
 
     def execute_cmd_async(self,
-                          app: str,
                           cmds: list,
                           cwd: str,
                           cb_done):
-        self.execute_cmd_thread = Thread(target=self.execute_cmd, args=(app, cmds, cwd, cb_done))
+        self.execute_cmd_thread = Thread(target=self.execute_cmd, args=(cmds, cwd, cb_done))
         self.execute_cmd_thread.start()
 
     def is_cmd_thread_running(self):
@@ -72,7 +71,7 @@ class threadlib:
     def execute_bat(self,
                     bat: str,
                     cb_done):
-        self.execute_cmd(app=Path(bat).name, cmds=[], cwd=str(Path(bat).parent), cb_done=cb_done)
+        self.execute_cmd(cmds=[Path(bat).name], cwd=str(Path(bat).parent), cb_done=cb_done)
 
     def execute_bat_async(self,
                           bat: str,
@@ -90,14 +89,16 @@ class threadlib:
                         cmds: list,
                         cwd: str,
                         cb_done):
-        cmds.insert(0, '-3')  # py -3 for python3
+        # py -3 for python3
+        cmds.insert(0, 'py')
+        cmds.insert(1, '-3')
         """
         [symptom]
             python3 cmd has some problem when using in multiple python3 installed environment
         [solution] use py -3 as below
             py -3 cmds[]
         """
-        self.execute_cmd(app='py', cmds=cmds, cwd=cwd, cb_done=cb_done)
+        self.execute_cmd(cmds=cmds, cwd=cwd, cb_done=cb_done)
 
     def execute_python3_async(self,
                               cmds: list,
