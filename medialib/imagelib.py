@@ -715,38 +715,64 @@ class imagelib:
         return np.array(crop)
 
     @staticmethod
-    def rgb8882yuv(rgb):
-        """
-        reference: https://gist.github.com/Quasimondo/c3590226c924a06b276d606f4f189639
-        input is a RGB numpy array with shape (height,width,3), can be uint,int, float or double,
-        values expected in the range 0..255
-        output is a double YUV numpy array with shape (height,width,3), values in the range 0..255
-        """
-        m = np.array([[0.29900, -0.16874, 0.50000],
-                      [0.58700, -0.33126, -0.41869],
-                      [0.11400, 0.50000, -0.08131]])
-
-        yuv = np.dot(rgb, m)
-        yuv[:, :, 1:] += 128.0
-        return yuv
+    def rgb8882yuv444(rgb888: np.array, bgr2rgb: bool = False):
+        if bgr2rgb:
+            rgb888 = cv2.cvtColor(rgb888, cv2.COLOR_BGRA2RGB)
+        yuv444 = cv2.cvtColor(rgb888, cv2.COLOR_RGB2YUV)
+        return yuv444
 
     @staticmethod
-    def yuv2rgb888(yuv):
-        """
-        reference: https://gist.github.com/Quasimondo/c3590226c924a06b276d606f4f189639
-        input is an YUV numpy array with shape (height,width,3) can be uint,int, float or double,
-        values expected in the range 0..255
-        output is a double RGB numpy array with shape (height,width,3), values in the range 0..255
-        """
-        m = np.array([[1.0, 1.0, 1.0],
-                      [-0.000007154783816076815, -0.3441331386566162, 1.7720025777816772],
-                      [1.4019975662231445, -0.7141380310058594, 0.00001542569043522235]])
+    def yuv4442rgb888(yuv444: np.array):
+        rgb888 = cv2.cvtColor(yuv444, cv2.COLOR_YUV2RGB)
+        return rgb888
 
-        rgb = np.dot(yuv, m)
-        rgb[:, :, 0] -= 179.45477266423404
-        rgb[:, :, 1] += 135.45870971679688
-        rgb[:, :, 2] -= 226.8183044444304
-        return rgb
+    @staticmethod
+    def rgb8882yuv422(rgb888: np.array, bgr2rgb: bool = False):
+        """
+        https://stackoverflow.com/questions/70496578/conversion-from-bgr-to-yuyv-with-opencv-python
+        """
+        if bgr2rgb:
+            rgb888 = cv2.cvtColor(rgb888, cv2.COLOR_BGRA2RGB)
+        yuv444 = cv2.cvtColor(rgb888, cv2.COLOR_RGB2YUV)
+
+        # Create YUYV from YUV
+        y0 = np.expand_dims(yuv444[..., 0][::, ::2], axis=2)
+        u = np.expand_dims(yuv444[..., 1][::, ::2], axis=2)
+        y1 = np.expand_dims(yuv444[..., 0][::, 1::2], axis=2)
+        v = np.expand_dims(yuv444[..., 2][::, ::2], axis=2)
+        yuv422 = np.concatenate((y0, u, y1, v), axis=2)
+        yuv422 = yuv422.reshape((yuv422.shape[0], yuv422.shape[1] * 2, int(yuv422.shape[2] / 2)))
+        return yuv422
+
+    @staticmethod
+    def rgb8882ycrcb444(rgb888: np.array, bgr2rgb: bool = False):
+        if bgr2rgb:
+            rgb888 = cv2.cvtColor(rgb888, cv2.COLOR_BGRA2RGB)
+        ycrcb444 = cv2.cvtColor(rgb888, cv2.COLOR_RGB2YCrCb)
+        return ycrcb444
+
+    @staticmethod
+    def ycrcb4442rgb888(yuv444: np.array):
+        rgb888 = cv2.cvtColor(yuv444, cv2.COLOR_YCrCb2RGB)
+        return rgb888
+
+    @staticmethod
+    def rgb8882ycrcb422(rgb888: np.array, bgr2rgb: bool = False):
+        """
+        https://stackoverflow.com/questions/70496578/conversion-from-bgr-to-yuyv-with-opencv-python
+        """
+        if bgr2rgb:
+            rgb888 = cv2.cvtColor(rgb888, cv2.COLOR_BGRA2RGB)
+        ycrcb444 = cv2.cvtColor(rgb888, cv2.COLOR_RGB2YCrCb)
+
+        # Create YUYV from YUV
+        y0 = np.expand_dims(ycrcb444[..., 0][::, ::2], axis=2)
+        u = np.expand_dims(ycrcb444[..., 1][::, ::2], axis=2)
+        y1 = np.expand_dims(ycrcb444[..., 0][::, 1::2], axis=2)
+        v = np.expand_dims(ycrcb444[..., 2][::, ::2], axis=2)
+        ycrcb422 = np.concatenate((y0, u, y1, v), axis=2)
+        ycrcb422 = ycrcb422.reshape((ycrcb422.shape[0], ycrcb422.shape[1] * 2, int(ycrcb422.shape[2] / 2)))
+        return ycrcb422
 
     @staticmethod
     def folder_crop_resize(folder: str, prefix_name: str, w_resize: int, h_resize: int):
