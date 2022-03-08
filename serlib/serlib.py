@@ -32,7 +32,8 @@ class serlib(QThread):
                  inter_byte_timeout: int = None,
                  read_received=None,
                  all_done=None,
-                 console_show_read: bool = False
+                 console_show_read: bool = False,
+                 read_line: bool = False
                  ):
         super().__init__()
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S.%f')
@@ -50,6 +51,7 @@ class serlib(QThread):
         else:
             self.all_done = None
         self.console_show_read = console_show_read
+        self.read_line = read_line
         try:
             self.serial = serial.Serial(port=port,
                                         baudrate=baudrate,
@@ -131,8 +133,9 @@ class serlib(QThread):
             try:
                 raw = self.serial.readline()
                 data = raw.decode()
-                self.logger.info(f'READ len({len(data)})')
-                self.logger.info(f'READ <<< {data}')
+                if self.console_show_read:
+                    self.logger.info(f'READ len({len(data)})')
+                    self.logger.info(f'READ <<<\n{data}')
                 ret = data
             except Exception as e:
                 self.logger.error(f'{type(e).__name__}!!! {e}')
@@ -155,9 +158,15 @@ class serlib(QThread):
     # region [thread]
     def run(self):
         self.logger.info(f'start!!!')
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            executor.submit(self.write_thread)
-            executor.submit(self.read_thread)
+        self.logger.error(f'read_line: {self.read_line}')
+        if self.read_line:
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                executor.submit(self.write_thread)
+                executor.submit(self.readline_thread)
+        else:
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                executor.submit(self.write_thread)
+                executor.submit(self.read_thread)
         self.logger.info('all done!!!')
         self.all_done.emit()
 
@@ -182,6 +191,28 @@ class serlib(QThread):
 
         # [TODO] this log won't be shown after stop
         self.logger.info('EXIT reading...')
+
+    def readline_thread(self):
+        """
+        keep reading line and put data into read buffer
+        """
+        if not self.serial:
+            self.logger.error('serial is None!!!')
+            return
+
+        while self.is_opened():
+            self.msleep(10)
+            size = self.in_waiting()
+            # self.logger.info(f'size: {size}')
+            if size:
+                data = self.readline()
+                if data:
+                    self.bufr.appendleft(data)
+                    if self.read_received:
+                        self.read_received.emit(data)
+
+        # [TODO] this log won't be shown after stop
+        self.logger.info('EXIT reading line...')
 
     def write_thread(self):
         """
