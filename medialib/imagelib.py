@@ -715,6 +715,37 @@ class imagelib:
         return np.array(crop)
 
     @staticmethod
+    def pilrotate(image: np.ndarray, angle: float = 0.0, expand: bool = True):
+        """
+        image rotate.
+
+        Parameters
+        ----------
+        image : np.ndarray
+            image buffer
+        angle : float
+            angle
+        expand : bool
+            expand
+
+        Returns
+        -------
+        np.ndarray
+            rotate buffer
+        """
+        # if both the width and height are 0, then return the original image
+        if not angle:
+            imagelib.slogger.warning('angle is 0 or None , ignore!!!')
+            return image
+
+        # rotate the image
+        image = Image.fromarray(image)
+        rotate = image.rotate(angle=angle, expand=expand)
+
+        # return the rotated image
+        return np.array(rotate)
+
+    @staticmethod
     def rgb8882yuv444(rgb888: np.array, bgr2rgb: bool = False):
         if bgr2rgb:
             rgb888 = cv2.cvtColor(rgb888, cv2.COLOR_BGRA2RGB)
