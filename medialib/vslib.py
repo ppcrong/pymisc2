@@ -31,6 +31,8 @@ class vslib:
         self.logger.info(f'(w, h, fps, fcnt): {self.getinfo()}')
         if type(src) == int:
             (self.grabbed, self.frame) = self.stream.read()
+        else:
+            (self.grabbed, self.frame) = (True, None)
         self.started = False
         self.read_lock = Lock()
 
